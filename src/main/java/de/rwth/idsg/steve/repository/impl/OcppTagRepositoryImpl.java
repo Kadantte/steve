@@ -1,6 +1,6 @@
 /*
  * SteVe - SteckdosenVerwaltung - https://github.com/steve-community/steve
- * Copyright (C) 2013-2019 RWTH Aachen University - Information Systems - Intelligent Distributed Systems Group (IDSG).
+ * Copyright (C) 2013-2025 SteVe Community Team
  * All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,7 +31,6 @@ import org.joda.time.DateTime;
 import org.jooq.DSLContext;
 import org.jooq.JoinType;
 import org.jooq.Record10;
-import org.jooq.Record7;
 import org.jooq.RecordMapper;
 import org.jooq.Result;
 import org.jooq.SelectQuery;
@@ -161,9 +160,12 @@ public class OcppTagRepositoryImpl implements OcppTagRepository {
     public List<String> getActiveIdTags() {
         return ctx.select(OCPP_TAG_ACTIVITY.ID_TAG)
                   .from(OCPP_TAG_ACTIVITY)
-                  .where(OCPP_TAG_ACTIVITY.IN_TRANSACTION.isFalse())
+                  .where(OCPP_TAG_ACTIVITY.ACTIVE_TRANSACTION_COUNT
+                          .lessThan(OCPP_TAG_ACTIVITY.MAX_ACTIVE_TRANSACTION_COUNT.cast(Long.class))
+                          .or(OCPP_TAG_ACTIVITY.MAX_ACTIVE_TRANSACTION_COUNT.lessThan(0)))
                     .and(OCPP_TAG_ACTIVITY.BLOCKED.isFalse())
-                    .and(OCPP_TAG_ACTIVITY.EXPIRY_DATE.isNull().or(OCPP_TAG_ACTIVITY.EXPIRY_DATE.greaterThan(DateTime.now())))
+                    .and(OCPP_TAG_ACTIVITY.EXPIRY_DATE.isNull()
+                            .or(OCPP_TAG_ACTIVITY.EXPIRY_DATE.greaterThan(DateTime.now())))
                   .fetch(OCPP_TAG_ACTIVITY.ID_TAG);
     }
 
